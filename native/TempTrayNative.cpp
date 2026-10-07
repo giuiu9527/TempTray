@@ -12,6 +12,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <string>
+#include <math.h>
 #include "IPlatform.h"
 #include "IDeviceManager.h"
 #include "ICPUEx.h"
@@ -181,9 +182,19 @@ static void Render()
     GdiFlush();
 
     unsigned fg = g_light ? 0 : 255;                                 // text colour channel value
+    // Grey-scale AA looks thinner than ClearType; lift mid coverage so strokes read as solid as TrafficMonitor's.
+    // Dark text on a light bar needs more lift than light text on a dark bar.
+    static unsigned char lut[256];
+    static bool lutLight = !g_light;
+    if (lutLight != g_light)
+    {
+        lutLight = g_light;
+        double gamma = g_light ? 0.55 : 0.8;
+        for (int i = 0; i < 256; i++) lut[i] = (unsigned char)(255.0 * pow(i / 255.0, gamma) + 0.5);
+    }
     for (int i = 0; i < w * h; i++)
     {
-        unsigned a = (px[i] >> 8) & 0xFF;                            // coverage (green channel of grey text)
+        unsigned a = lut[(px[i] >> 8) & 0xFF];                       // coverage (green channel of grey text)
         unsigned alpha = a ? a : 1;                                  // alpha 1: invisible but keeps the area clickable
         unsigned c = fg * a / 255;                                   // premultiplied colour
         px[i] = (alpha << 24) | (c << 16) | (c << 8) | c;
