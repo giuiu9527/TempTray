@@ -145,7 +145,7 @@ static void Render()
     HDC dc = CreateCompatibleDC(screen);
     int fontPx = MulDiv(9, dpi, 72);
     HFONT font = CreateFontW(-fontPx, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                             ANTIALIASED_QUALITY, DEFAULT_PITCH, L"Microsoft YaHei UI");
+                             CLEARTYPE_QUALITY, DEFAULT_PITCH, L"Microsoft YaHei UI");
     HGDIOBJ oldFont = SelectObject(dc, font);
 
     SIZE labelSz, valSz, rowSz;
@@ -189,12 +189,15 @@ static void Render()
     if (lutLight != g_light)
     {
         lutLight = g_light;
-        double gamma = g_light ? 0.55 : 0.8;
+        double gamma = g_light ? 0.75 : 0.9;
         for (int i = 0; i < 256; i++) lut[i] = (unsigned char)(255.0 * pow(i / 255.0, gamma) + 0.5);
     }
     for (int i = 0; i < w * h; i++)
     {
-        unsigned a = lut[(px[i] >> 8) & 0xFF];                       // coverage (green channel of grey text)
+        // ClearType gives per-subpixel coverage in R,G,B; averaging them keeps the 3x horizontal
+        // resolution without colour fringes (a layered window cannot do real ClearType)
+        unsigned cov = (((px[i] >> 16) & 0xFF) + ((px[i] >> 8) & 0xFF) + (px[i] & 0xFF)) / 3;
+        unsigned a = lut[cov];
         unsigned alpha = a ? a : 1;                                  // alpha 1: invisible but keeps the area clickable
         unsigned c = fg * a / 255;                                   // premultiplied colour
         px[i] = (alpha << 24) | (c << 16) | (c << 8) | c;
