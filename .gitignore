@@ -1,0 +1,5 @@
+LibreHardwareMonitorLib.dll
+*.exe
+*.log
+TempTray.ini
+shot.png
