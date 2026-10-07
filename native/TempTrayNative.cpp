@@ -154,8 +154,9 @@ static void Render()
     GetTextExtentPoint32W(dc, L"Ag", 2, &rowSz);
     int gap = MulDiv(4, dpi, 96), pad = MulDiv(2, dpi, 96);
     int w = pad + labelSz.cx + gap + valSz.cx + pad;
-    int h = min(trayH, rowSz.cy * 2 + pad);
-    int rowH = h / 2;
+    // same row pitch as TrafficMonitor's taskbar window: 16 logical px per row (24 px at 150%), so rows line up
+    int rowH = MulDiv(16, dpi, 96);
+    int h = min(trayH, rowH * 2);
 
     BITMAPINFO bi = {};
     bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
@@ -175,10 +176,10 @@ static void Render()
     SetTextColor(dc, RGB(255, 255, 255));
     int vx = pad + labelSz.cx + gap;
     RECT r;
-    r = { pad, 0, pad + labelSz.cx + 2, rowH };       DrawTextW(dc, L"CPU:", -1, &r, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
-    r = { pad, rowH, pad + labelSz.cx + 2, rowH * 2 }; DrawTextW(dc, L"GPU:", -1, &r, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
-    r = { vx, 0, vx + valSz.cx, rowH };               DrawTextW(dc, cpuS.c_str(), -1, &r, DT_RIGHT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
-    r = { vx, rowH, vx + valSz.cx, rowH * 2 };        DrawTextW(dc, gpuS.c_str(), -1, &r, DT_RIGHT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+    r = { pad, 0, pad + labelSz.cx + 2, rowH };       DrawTextW(dc, L"CPU:", -1, &r, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_NOCLIP);
+    r = { pad, rowH, pad + labelSz.cx + 2, rowH * 2 }; DrawTextW(dc, L"GPU:", -1, &r, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_NOCLIP);
+    r = { vx, 0, vx + valSz.cx, rowH };               DrawTextW(dc, cpuS.c_str(), -1, &r, DT_RIGHT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_NOCLIP);
+    r = { vx, rowH, vx + valSz.cx, rowH * 2 };        DrawTextW(dc, gpuS.c_str(), -1, &r, DT_RIGHT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_NOCLIP);
     GdiFlush();
 
     unsigned fg = g_light ? 0 : 255;                                 // text colour channel value
