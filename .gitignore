@@ -1,5 +1,6 @@
 LibreHardwareMonitorLib.dll
 *.exe
+*.obj
 *.log
-TempTray.ini
+*.ini
 shot.png
